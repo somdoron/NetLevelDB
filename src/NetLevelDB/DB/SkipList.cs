@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
+using NetLevelDB.CSharp;
 using NetLevelDB.Port;
 using NetLevelDB.Util;
 

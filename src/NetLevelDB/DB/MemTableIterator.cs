@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using NetLevelDB.CSharp;
+using NetLevelDB.Table;
 using NetLevelDB.Util;
 
 namespace NetLevelDB.DB
@@ -9,7 +11,7 @@ namespace NetLevelDB.DB
 	class MemTableIterator : Iterator
 	{
 		private SkipList.Iterator m_iterator;
-		private ByteArrayPointer m_tmp;
+		private string m_tmp;
 
 		public MemTableIterator(SkipList table)
 		{
@@ -23,7 +25,7 @@ namespace NetLevelDB.DB
 
 		public override void Seek(Slice target)
 		{
-			m_iterator.Seek(EncodeKey(out m_tmp, target));
+			m_iterator.Seek(EncodeKey(ref m_tmp, target));
 		}
 
 		public override void SeekToFirst()
@@ -39,17 +41,14 @@ namespace NetLevelDB.DB
 		// Encode a suitable internal key target for "target" and return it.
 		// Uses *scratch as scratch space, and the returned pointer will point
 		// into this scratch space.
-		static ByteArrayPointer EncodeKey(out ByteArrayPointer scratch, Slice target)
+		static ByteArrayPointer EncodeKey(ref string scratch, Slice target)
 		{
-			int size = Coding.VarintLength(target.Size) + target.Size;
+			scratch = string.Empty;
+			Coding.PutVarint32(ref scratch,(uint)target.Size);
 
-			scratch = new ByteArrayPointer(size);
+			scratch += target.Data.GetString(target.Size);
 
-			scratch = Coding.EncodeVarint32(scratch, (uint)target.Size);
-
-			target.Data.CopyTo(scratch, target.Size);
-
-			return new ByteArrayPointer(scratch.Data);
+			return new ByteArrayPointer(scratch);
 		}
 
 		public override void Next()
@@ -64,15 +63,15 @@ namespace NetLevelDB.DB
 
 		public override Slice Key
 		{
-			get { return Coding.GetLengthPrefixedSlice(m_iterator.Key); }
+			get { return MemTable.GetLengthPrefixedSlice(m_iterator.Key); }
 		}
 
 		public override Slice Value
 		{
 			get
 			{
-				Slice key_slice = Coding.GetLengthPrefixedSlice(m_iterator.Key);
-				return Coding.GetLengthPrefixedSlice(key_slice.Data + key_slice.Size);
+				Slice key_slice = MemTable.GetLengthPrefixedSlice(m_iterator.Key);
+				return MemTable.GetLengthPrefixedSlice(key_slice.Data + key_slice.Size);
 			}
 		}
 

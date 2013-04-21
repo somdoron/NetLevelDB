@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using NetLevelDB.CSharp;
+using NetLevelDB.Table;
 using NetLevelDB.Util;
 
 namespace NetLevelDB.DB
@@ -16,7 +18,7 @@ namespace NetLevelDB.DB
 		private int m_refs;
 		private KeyComparator m_comparator;
 		private SkipList m_table;
-		
+
 		public MemTable(InternalKeyComparator cmp)
 		{
 			m_comparator = new KeyComparator(cmp);
@@ -43,16 +45,16 @@ namespace NetLevelDB.DB
 
 			if (m_refs <= 0)
 			{
-				Dispose();				
+				Dispose();
 			}
 		}
 
 		private void Dispose()
 		{
 			m_table = null;
-			
+
 			Debug.Assert(m_refs == 0);
-		}		
+		}
 
 		// Return an iterator that yields the contents of the memtable.
 		//
@@ -104,7 +106,7 @@ namespace NetLevelDB.DB
 		// If memtable contains a deletion for key, store a NotFound() error
 		// in *status and return true.
 		// Else, return false.
-		public bool Get(LookupKey key, ref ByteArrayPointer value, ref Status s)
+		public bool Get(LookupKey key, ref string value, ref Status s)
 		{
 			Slice memkey = key.GetMemTableKey();
 			SkipList.Iterator iter = new SkipList.Iterator(m_table);
@@ -128,13 +130,13 @@ namespace NetLevelDB.DB
 								key.GetUserKey()) == 0)
 				{
 					// Correct user key
-					UInt64 tag = Coding.DecodeFixed64(key_ptr+ ((int)key_length - 8));
+					UInt64 tag = Coding.DecodeFixed64(key_ptr + ((int)key_length - 8));
 					switch ((ValueTypeEnum)(tag & 0xff))
 					{
 						case ValueTypeEnum.kTypeValue:
 							{
-								Slice v = Coding.GetLengthPrefixedSlice(key_ptr+((int)key_length));
-								value = new ByteArrayPointer(v.Data, v.Size);
+								Slice v = GetLengthPrefixedSlice(key_ptr + (int)key_length);
+								value = v.Data.GetString(v.Size);
 								return true;
 							}
 						case ValueTypeEnum.kTypeDeletion:
@@ -145,5 +147,14 @@ namespace NetLevelDB.DB
 			}
 			return false;
 		}
+
+		internal static Slice GetLengthPrefixedSlice(ByteArrayPointer data)
+		{
+			UInt32 len;
+			ByteArrayPointer p = data;
+			p = Coding.GetVarint32Ptr(p, p + 5, out len);  // +5: we assume "p" is not corrupted
+			return new Slice(p, (int)len);
+		}
+
 	}
 }

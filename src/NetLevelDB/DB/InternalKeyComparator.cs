@@ -3,25 +3,26 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using NetLevelDB.CSharp;
 using NetLevelDB.Util;
 
 namespace NetLevelDB.DB
 {
-	class InternalKeyComparator : IComparator
+	class InternalKeyComparator : Comparator
 	{
-		IComparator m_userComparator;
+		Comparator m_userComparator;
 
-		public IComparator UserComparator
+		public Comparator UserComparator
 		{
 			get { return m_userComparator; }
 		}
 
-		public InternalKeyComparator(IComparator c)
+		public InternalKeyComparator(Comparator c)
 		{
 			m_userComparator = c;
 		}
 
-		public int Compare(Slice akey, Slice bkey)
+		public override int Compare(Slice akey, Slice bkey)
 		{
 			// Order by:
 			//    increasing user key (according to user-supplied comparator)
@@ -44,38 +45,38 @@ namespace NetLevelDB.DB
 			return r;
 		}
 
-		public string Name
+		public override string Name
 		{
 			get { return "leveldb.InternalKeyComparator"; }
 		}
 
-		public void FindShortestSeparator(ref ByteArrayPointer start, Slice limit)
+		public override void FindShortestSeparator(ref string start, Slice limit)
 		{
 			// Attempt to shorten the user portion of the key
 			Slice user_start = new Slice(start).ExtractUserKey();
 			Slice user_limit = limit.ExtractUserKey();
-			ByteArrayPointer tmp = new ByteArrayPointer(user_start.Data, user_start.Size);
+			string tmp = user_start.Data.GetString(user_start.Size);
 			
 			UserComparator.FindShortestSeparator(ref tmp, user_limit);
 			if (tmp.Length < user_start.Size &&
 					UserComparator.Compare(user_start, new Slice(tmp)) < 0)
-			{
-				tmp.Extend(8, true);
-				
+			{				
 				// User key has become shorter physically, but larger logically.
 				// Tack on the earliest possible number to the shortened user key.
-				
-				Coding.EncodeFixed64(tmp, Global.PackSequenceAndType(Global.kMaxSequenceNumber, Global.kValueTypeForSeek));				
+
+				Coding.PutFixed64(ref tmp,
+					Global.PackSequenceAndType(Global.kMaxSequenceNumber, Global.kValueTypeForSeek));
+
 				Debug.Assert(this.Compare(new Slice(start), new Slice(tmp)) < 0);
 				Debug.Assert(this.Compare(new Slice(tmp), limit) < 0);
-				start = tmp;
+				start = start.Swap(ref tmp);
 			}
 		}
 
-		public void FindShortSuccessor(ref ByteArrayPointer key)
+		public override void FindShortSuccessor(ref string key)
 		{
 			Slice user_key = new Slice(key).ExtractUserKey();
-			ByteArrayPointer tmp = new ByteArrayPointer(user_key.Data, user_key.Size);
+			string tmp = user_key.Data.GetString(user_key.Size);
 
 			UserComparator.FindShortSuccessor(ref tmp);
 			if (tmp.Length < user_key.Size &&
@@ -84,9 +85,8 @@ namespace NetLevelDB.DB
 				// User key has become shorter physically, but larger logically.
 				// Tack on the earliest possible number to the shortened user key.
 
-				tmp.Extend(8, true);
-
-				Coding.EncodeFixed64(tmp, Global.PackSequenceAndType(Global.kMaxSequenceNumber, Global.kValueTypeForSeek));
+				
+				Coding.PutFixed64(ref tmp, Global.PackSequenceAndType(Global.kMaxSequenceNumber, Global.kValueTypeForSeek));
 				Debug.Assert(this.Compare(new Slice(key), new Slice(tmp)) < 0);
 				key = tmp;
 			}

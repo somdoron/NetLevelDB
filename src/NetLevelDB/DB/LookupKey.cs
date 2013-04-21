@@ -1,4 +1,5 @@
 using System;
+using NetLevelDB.CSharp;
 using NetLevelDB.Util;
 
 namespace NetLevelDB.DB

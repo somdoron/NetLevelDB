@@ -40,14 +40,22 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CSharp\StringExtension.cs" />
+    <Compile Include="Table\BlockBuilder.cs" />
+    <Compile Include="Table\IteratorWrapper.cs" />
+    <Compile Include="Table\MergingIterator.cs" />
+    <Compile Include="Util\BytewiseComparator.cs" />
+    <Compile Include="Util\Cache.cs" />
     <Compile Include="DB\InternalKeyComparator.cs" />
     <Compile Include="DB\LookupKey.cs" />
-    <Compile Include="EmptyIterator.cs" />
+    <Compile Include="Table\EmptyIterator.cs" />
+    <Compile Include="Environment\RandomAccessFile.cs" />
+    <Compile Include="FilterPolicy.cs" />
     <Compile Include="Global.cs" />
     <Compile Include="DB\MemTable.cs" />
     <Compile Include="DB\MemTableIterator.cs" />
-    <Compile Include="IComparator.cs" />
-    <Compile Include="Iterator.cs" />
+    <Compile Include="Util\Comparator.cs" />
+    <Compile Include="Table\Iterator.cs" />
     <Compile Include="DB\KeyComparator.cs" />
     <Compile Include="Options.cs" />
     <Compile Include="Port\AtomicPointer.cs" />
@@ -58,10 +66,20 @@
     <Compile Include="Slice.cs" />
     <Compile Include="Snapshot.cs" />
     <Compile Include="Status.cs" />
-    <Compile Include="Util\ByteArrayPointer.cs" />
+    <Compile Include="Table\Block.cs" />
+    <Compile Include="Table\FilterBlock\FilterBlockBuilder.cs" />
+    <Compile Include="Table\FilterBlock\FilterBlockReader.cs" />
+    <Compile Include="Table\Format\BlockContents.cs" />
+    <Compile Include="Table\Format\BlockHandle.cs" />
+    <Compile Include="Table\Format\Footer.cs" />
+    <Compile Include="Table\Format\FormatHelper.cs" />
+    <Compile Include="Table\Table.cs" />
+    <Compile Include="Table\TwoLevelIterator.cs" />
+    <Compile Include="CSharp\ByteArrayPointer.cs" />
     <Compile Include="Util\Coding.cs" />
     <Compile Include="WriteOptions.cs" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

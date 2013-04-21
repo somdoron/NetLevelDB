@@ -31,5 +31,13 @@ namespace NetLevelDB
 			FillCache = true;
 			Snapshot = null;
 		}
+
+		public static ReadOptions Default
+		{
+			get
+			{
+				return new ReadOptions();
+			}
+		}
 	}
 }

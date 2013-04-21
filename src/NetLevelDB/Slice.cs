@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using NetLevelDB.CSharp;
 using NetLevelDB.Util;
 
 namespace NetLevelDB
@@ -14,17 +15,18 @@ namespace NetLevelDB
 		{
 			Data = new ByteArrayPointer(0);
 			Size = 0;
-		}		
-
-		public Slice(ByteArrayPointer d) : this(d,d.Length)
-		{
-			
-		}		
-
+		}
+		
 		public Slice(ByteArrayPointer d, int n)
 		{
 			Data = d;
 			Size = n;
+		}
+
+		public Slice(string s)
+		{
+			Data = new ByteArrayPointer(Encoding.ASCII.GetBytes(s));
+			Size = s.Length;
 		}
 
 		public ByteArrayPointer Data { get; private set; }
@@ -51,7 +53,7 @@ namespace NetLevelDB
 		// Change this slice to refer to an empty array
 		public void Clear()
 		{
-			Data = new ByteArrayPointer(0);			
+			Data = new ByteArrayPointer(0);
 		}
 
 		// Drop the first "n" bytes from this slice.
@@ -64,7 +66,7 @@ namespace NetLevelDB
 
 		public override string ToString()
 		{
-			return Data.GetString();
+			return Data.GetString(Size);
 		}
 
 		// Three-way comparison.  Returns value:
@@ -81,10 +83,10 @@ namespace NetLevelDB
 				if (this[i] != b[i])
 				{
 					r = this[i].CompareTo(b[i]);
-			
+
 					break;
 				}
-			}							
+			}
 
 			if (r == 0)
 			{
@@ -104,7 +106,7 @@ namespace NetLevelDB
 					if (this[i] != x[i])
 					{
 						return false;
-					}	
+					}
 				}
 
 				return true;
@@ -113,11 +115,11 @@ namespace NetLevelDB
 			return false;
 		}
 
-		public Slice ExtractUserKey() 
+		public Slice ExtractUserKey()
 		{
 			Debug.Assert(Size >= 8);
 			return new Slice(Data, Size - 8);
-	}
+		}
 
 
 		public bool Equals(Slice other)
@@ -146,13 +148,12 @@ namespace NetLevelDB
 			if (ReferenceEquals(null, obj)) return false;
 			if (ReferenceEquals(this, obj)) return true;
 			if (obj.GetType() != this.GetType()) return false;
-			return Equals((Slice) obj);
+			return Equals((Slice)obj);
 		}
 
 		public override int GetHashCode()
 		{
-			throw new NotImplementedException();
-			return (Data != null ? Data.GetHashCode() : 0);
+			return Data.GetString(Size).GetHashCode();
 		}
 
 		public static bool operator ==(Slice left, Slice right)
@@ -163,7 +164,22 @@ namespace NetLevelDB
 		public static bool operator !=(Slice left, Slice right)
 		{
 			return !Equals(left, right);
-		}		
+		}
+
+		public static implicit operator Slice(string text)
+		{
+			return new Slice(text);
+		}
+
+		public Slice Clone()
+		{			
+			ByteArrayPointer bytes = new ByteArrayPointer(Size);
+			Data.CopyTo(bytes, Size);
+
+			Slice slice  = new Slice(bytes, Size);
+
+			return slice;
+		}
 	}
 }
 

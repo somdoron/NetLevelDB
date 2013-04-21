@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 
-namespace NetLevelDB.Util
+namespace NetLevelDB.CSharp
 {
 	public struct ByteArrayPointer
 	{
@@ -28,14 +26,18 @@ namespace NetLevelDB.Util
 
 		}
 
+		public ByteArrayPointer(string s)
+		{
+			m_bytes = Encoding.ASCII.GetBytes(s);
+			m_offset = 0;
+		}
+
 		public ByteArrayPointer(ByteArrayPointer other)
 			: this(other.m_bytes, other.m_offset)
 		{
 
 		}
-
-		
-
+	
 		public ByteArrayPointer(ByteArrayPointer other, int offset) :
 			this(other.m_bytes, other.m_offset + offset)
 		{
@@ -47,7 +49,7 @@ namespace NetLevelDB.Util
 			get { return m_bytes.Length - m_offset; }
 		}
 
-		public byte[] Data { get { return m_bytes; } }
+		//public byte[] Data { get { return m_bytes; } }
 
 		public bool IsNull
 		{
@@ -119,21 +121,16 @@ namespace NetLevelDB.Util
 			return newPointer;
 		}
 
-		public string GetString()
-		{
-			return GetString(Encoding.ASCII);
-		}
-
-		public string GetString(Encoding encoding)
-		{
-			return encoding.GetString(m_bytes, m_offset, Length);
+		public string GetString(int count)
+		{		
+			return Encoding.ASCII.GetString(m_bytes, m_offset, count);
 		}
 
 		public static ByteArrayPointer Null
 		{
 			get
 			{
-				return new ByteArrayPointer(null);
+				return new ByteArrayPointer((byte[])null);
 			}
 		}
 

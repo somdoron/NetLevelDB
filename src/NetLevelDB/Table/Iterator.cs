@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Diagnostics;
+using NetLevelDB.Util;
 
-namespace NetLevelDB
+namespace NetLevelDB.Table
 {
 	public abstract class Iterator : IDisposable
 	{
@@ -63,6 +61,30 @@ namespace NetLevelDB
 		{
 			return new EmptyIterator(status);
 		}
+
+    internal static Iterator NewTwoLevelIterator(
+      Iterator index_iter, BlockFunctionDelegate block_function, object arg, ReadOptions options)
+    {
+      return new TwoLevelIterator(index_iter, block_function, arg, options);
+    }
+
+    internal static Iterator NewMergingIterator(Comparator comparator, Iterator[] children)
+    {
+      Debug.Assert(children.Length >= 0);
+
+      if (children.Length == 0)
+      {
+        return EmptyIterator;
+      }
+      else if (children.Length == 1)
+      {
+        return children[0];
+      }
+      else
+      {
+        return new MergingIterator(comparator, children);
+      }  
+    }
 
 		// An iterator is either positioned at a key/value pair, or
 		// not valid.  This method returns true iff the iterator is valid.

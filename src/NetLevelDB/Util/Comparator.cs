@@ -4,15 +4,17 @@ using System.Linq;
 using System.Text;
 using NetLevelDB.Util;
 
-namespace NetLevelDB
+namespace NetLevelDB.Util
 {
-	public interface IComparator
+	public abstract class Comparator
 	{
+		private static Comparator s_bitwiseComparator = new BytewiseComparator();
+
 		// Three-way comparison.  Returns value:
   //   < 0 iff "a" < "b",
   //   == 0 iff "a" == "b",
   //   > 0 iff "a" > "b"
-		int Compare(Slice a, Slice b);
+		public abstract int Compare(Slice a, Slice b);
 
   // The name of the comparator.  Used to check for comparator
   // mismatches (i.e., a DB created with one comparator is
@@ -24,7 +26,7 @@ namespace NetLevelDB
   //
   // Names starting with "leveldb." are reserved and should not be used
   // by any clients of this package.
-   string Name { get; }
+		public abstract string Name { get; }
 
   // Advanced functions: these are used to reduce the space requirements
   // for internal data structures like index blocks.
@@ -32,13 +34,18 @@ namespace NetLevelDB
   // If *start < limit, changes *start to a short string in [start,limit).
   // Simple comparator implementations may return with *start unchanged,
   // i.e., an implementation of this method that does nothing is correct.
-   void FindShortestSeparator(
-      ref ByteArrayPointer start,
+		public abstract void FindShortestSeparator(
+      ref string start,
       Slice limit);
 
   // Changes *key to a short string >= *key.
   // Simple comparator implementations may return with *key unchanged,
   // i.e., an implementation of this method that does nothing is correct.
-	 void FindShortSuccessor(ref ByteArrayPointer key);
+		public abstract void FindShortSuccessor(ref string key);
+
+		public static Comparator BytewiseComparator 
+		{
+			get { return s_bitwiseComparator; }
+		}
 	}
 }

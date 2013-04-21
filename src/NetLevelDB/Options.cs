@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using NetLevelDB.Util;
 
 namespace NetLevelDB
 {
@@ -9,7 +10,7 @@ namespace NetLevelDB
 	// sequence of key,value pairs.  Each block may be compressed before
 	// being stored in a file.  The following enum describes which
 	// compression method (if any) is used to compress a block.
-	public enum CompressionType
+	public enum CompressionType : byte
 	{
 		// NOTE: do not change the values of existing entries, as these are
 		// part of the persistent format on disk.
@@ -29,7 +30,7 @@ namespace NetLevelDB
 		// REQUIRES: The client must ensure that the comparator supplied
 		// here has the same name and orders keys *exactly* the same as the
 		// comparator provided to previous open calls on the same DB.
-		public IComparator Comparator { get; set; }
+		public Comparator Comparator { get; set; }
 
 		// If true, the database will be created if it is missing.
 		// Default: false
@@ -86,7 +87,7 @@ namespace NetLevelDB
 		// If non-NULL, use the specified cache for blocks.
 		// If NULL, leveldb will automatically create and use an 8MB internal cache.
 		// Default: NULL
-		//Cache* block_cache;
+		public Cache BlockCache { get; set; }
 
 		// Approximate size of user data packed per block.  Note that the
 		// block size specified here corresponds to uncompressed data.  The
@@ -124,12 +125,12 @@ namespace NetLevelDB
 		// NewBloomFilterPolicy() here.
 		//
 		// Default: NULL
-		//const FilterPolicy* filter_policy;
+		public FilterPolicy FilterPolicy { get; set; }
 
 		// Create an Options object with default values for all fields.
 		public Options()
 		{
-			//comparator(BytewiseComparator()),
+			Comparator = Comparator.BytewiseComparator;
 			CreateIfMissing = false;
 			ErrorIfExists = false;
 			ParanoidChecks = false;
@@ -140,13 +141,13 @@ namespace NetLevelDB
 			WriteBufferSize = 4 << 20;
 			MaxOpenFiles = 1000;
 
-			//BlockCache(NULL),
+			BlockCache = null;
 			BlockSize = 4096;
 			BlockRestartInterval = 16;
 
 			Compression = CompressionType.kSnappyCompression;
 
-			//filter_policy = null ;	
+			FilterPolicy = null ;	
 		}
 	}
 }
